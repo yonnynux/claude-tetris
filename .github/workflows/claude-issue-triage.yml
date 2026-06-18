@@ -1,0 +1,59 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    # Evita bucles: no procesar acciones de bots (ej. cuando Claude comenta/etiqueta)
+    if: github.event.sender.type != 'Bot'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Issue Triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowedTools
+            "Bash(gh issue view *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh label list *),Bash(gh label create *)"
+          prompt: |
+            Analiza el issue #${{ github.event.issue.number }} del repositorio ${{ github.repository }}.
+
+            Contexto del proyecto: es un juego de Tetris implementado en tres archivos planos sin dependencias:
+            - index.html — estructura DOM y canvases
+            - style.css  — estilos retro/dark
+            - game.js    — toda la lógica (~300 líneas, 'use strict')
+
+            Sigue estos pasos en orden:
+
+            1. Lee el issue completo con:
+               gh issue view ${{ github.event.issue.number }} --repo ${{ github.repository }}
+
+            2. Determina los labels apropiados según el contenido (tipo, prioridad, área afectada).
+               - Lista los labels existentes con: gh label list --repo ${{ github.repository }}
+               - Crea los que no existan con: gh label create <nombre> --color <hex> --repo ${{ github.repository }}
+               - Aplica los labels con: gh issue edit ${{ github.event.issue.number }} --add-label "<label1>,<label2>" --repo ${{ github.repository }}
+
+            3. Publica UN único comentario con el diagnóstico general en español:
+               gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "<diagnóstico>"
+
+               El diagnóstico debe incluir:
+               - **Resumen**: qué problema o solicitud describe el issue.
+               - **Causa probable / áreas afectadas**: qué parte del código (game.js, index.html, style.css) y qué función o sección es relevante.
+               - **Pasos sugeridos de alto nivel**: qué habría que cambiar para resolver el issue, sin escribir código.
+
+            No modifiques ningún archivo del repositorio ni abras pull requests.
