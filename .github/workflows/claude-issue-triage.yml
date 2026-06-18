@@ -51,6 +51,8 @@ jobs:
             3. Publica UN único comentario con el diagnóstico general en español:
                gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "<diagnóstico>"
 
+               El diagnóstico debe estar escrito en Markdown compatible con GitHub (usa ## para encabezados, **negrita**, listas con -, bloques de código con ``` si aplica). El cuerpo del comentario debe renderizarse correctamente en la UI de GitHub Issues.
+
                El diagnóstico debe incluir:
                - **Resumen**: qué problema o solicitud describe el issue.
                - **Causa probable / áreas afectadas**: qué parte del código (game.js, index.html, style.css) y qué función o sección es relevante.
