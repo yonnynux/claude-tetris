@@ -271,3 +271,129 @@ kbd {
 #restart-btn:hover {
   background: var(--color-btn-hover);
 }
+
+/* ---- Pause menu ---- */
+.pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--color-overlay-title);
+  transition: color 0.25s;
+}
+
+#pause-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.menu-btn {
+  width: 180px;
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.menu-btn:hover {
+  background: var(--color-btn-hover);
+}
+
+.menu-btn--secondary {
+  background: transparent;
+  color: var(--color-overlay-score);
+  border: 1px solid var(--color-overlay-score);
+}
+
+.menu-btn--secondary:hover {
+  background: var(--color-overlay-score);
+  color: var(--color-btn-text);
+}
+
+/* ---- Level selector ---- */
+.level-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.level-selector__label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--color-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: color 0.25s;
+}
+
+.level-selector__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-selector__controls span {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-value);
+  min-width: 28px;
+  text-align: center;
+  transition: color 0.25s;
+}
+
+.level-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.level-btn:hover {
+  background: var(--color-btn-hover);
+}
+
+/* ---- Controls sub-view ---- */
+.controls-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.controls-view.hidden {
+  display: none;
+}
+
+.controls-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controls-list li {
+  font-size: 13px;
+  color: var(--color-controls);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.25s;
+}

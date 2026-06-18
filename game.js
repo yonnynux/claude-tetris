@@ -34,6 +34,9 @@ const LINE_SCORES = [0, 100, 300, 500, 800];
 
 const LIGHTNING_TYPE = 9;
 const LIGHTNING_INTERVAL = 5; // lines between lightning spawns
+const START_LEVEL_KEY = 'tetris-start-level';
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 15;
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -43,13 +46,38 @@ const scoreEl = document.getElementById('score');
 const linesEl = document.getElementById('lines');
 const levelEl = document.getElementById('level');
 const overlay = document.getElementById('overlay');
+const gameoverBox = document.getElementById('gameover-box');
+const pauseBox = document.getElementById('pause-box');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const controlsBackBtn = document.getElementById('controls-back-btn');
+const pauseMain = document.getElementById('pause-main');
+const controlsView = document.getElementById('controls-view');
+const levelDecBtn = document.getElementById('level-dec-btn');
+const levelIncBtn = document.getElementById('level-inc-btn');
+const startLevelDisplay = document.getElementById('start-level-display');
 const themeToggleEl = document.getElementById('theme-toggle');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let pendingLightning, nextLightningLines, lightningFlash;
+let startLevel = parseInt(localStorage.getItem(START_LEVEL_KEY), 10) || MIN_LEVEL;
+
+function clampStartLevel(val) {
+  return Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, val));
+}
+
+function saveStartLevel(val) {
+  startLevel = clampStartLevel(val);
+  localStorage.setItem(START_LEVEL_KEY, startLevel);
+  startLevelDisplay.textContent = startLevel;
+}
+
+// Initialize display
+startLevelDisplay.textContent = startLevel;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -119,8 +147,11 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    const newLevel = Math.max(startLevel, Math.floor(lines / 10) + startLevel);
+    if (newLevel !== level) {
+      level = newLevel;
+      dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    }
     if (lines >= nextLightningLines) {
       pendingLightning = true;
       nextLightningLines = Math.floor(lines / LIGHTNING_INTERVAL) * LIGHTNING_INTERVAL + LIGHTNING_INTERVAL;
@@ -270,25 +301,44 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+function showOverlay(mode) {
+  overlay.classList.remove('hidden');
+  if (mode === 'gameover') {
+    gameoverBox.classList.remove('hidden');
+    pauseBox.classList.add('hidden');
+  } else {
+    pauseBox.classList.remove('hidden');
+    gameoverBox.classList.add('hidden');
+    // Always show main view when opening pause
+    pauseMain.classList.remove('hidden');
+    controlsView.classList.add('hidden');
+  }
+}
+
+function hideOverlay() {
+  overlay.classList.add('hidden');
+  gameoverBox.classList.add('hidden');
+  pauseBox.classList.add('hidden');
+}
+
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
-  overlay.classList.remove('hidden');
+  showOverlay('gameover');
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    hideOverlay();
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    showOverlay('pause');
   }
 }
 
@@ -314,10 +364,10 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (startLevel - 1) * 90);
   dropAccum = 0;
   pendingLightning = false;
   nextLightningLines = LIGHTNING_INTERVAL;
@@ -326,13 +376,19 @@ function init() {
   next = randomPiece();
   spawn();
   updateHUD();
-  overlay.classList.add('hidden');
+  hideOverlay();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (!gameOver) {
+      e.preventDefault();
+      togglePause();
+    }
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -356,7 +412,25 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
+// Game Over: restart button
 restartBtn.addEventListener('click', init);
+
+// Pause menu buttons
+resumeBtn.addEventListener('click', togglePause);
+pauseRestartBtn.addEventListener('click', init);
+
+controlsBtn.addEventListener('click', () => {
+  pauseMain.classList.add('hidden');
+  controlsView.classList.remove('hidden');
+});
+
+controlsBackBtn.addEventListener('click', () => {
+  controlsView.classList.add('hidden');
+  pauseMain.classList.remove('hidden');
+});
+
+levelDecBtn.addEventListener('click', () => saveStartLevel(startLevel - 1));
+levelIncBtn.addEventListener('click', () => saveStartLevel(startLevel + 1));
 
 function applyTheme(light) {
   if (light) {
