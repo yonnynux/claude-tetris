@@ -14,6 +14,7 @@ const COLORS = [
   '#64b5f6', // J - pale blue
   '#ffb74d', // L - orange
   '#e91e63', // Nut - magenta
+  '#ffeb3b', // Lightning - bright yellow
 ];
 
 const PIECES = [
@@ -26,9 +27,13 @@ const PIECES = [
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
   [[8,8,8],[8,0,8],[8,8,8]],                  // Nut (tuerca, centro hueco)
+  [[9]],                                        // Lightning (1x1 power-up)
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
+
+const LIGHTNING_TYPE = 9;
+const LIGHTNING_INTERVAL = 5; // lines between lightning spawns
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -44,9 +49,14 @@ const restartBtn = document.getElementById('restart-btn');
 const themeToggleEl = document.getElementById('theme-toggle');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let pendingLightning, nextLightningLines, lightningFlash;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
+}
+
+function createLightningPiece() {
+  return { type: LIGHTNING_TYPE, shape: [[LIGHTNING_TYPE]], x: Math.floor(COLS / 2), y: 0 };
 }
 
 function randomPiece() {
@@ -111,6 +121,10 @@ function clearLines() {
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    if (lines >= nextLightningLines) {
+      pendingLightning = true;
+      nextLightningLines = Math.floor(lines / LIGHTNING_INTERVAL) * LIGHTNING_INTERVAL + LIGHTNING_INTERVAL;
+    }
     updateHUD();
   }
 }
@@ -138,7 +152,21 @@ function softDrop() {
   }
 }
 
+function activateLightning(lx, ly) {
+  lightningFlash = 12;
+  board.splice(ly, 1);
+  board.unshift(new Array(COLS).fill(0));
+  for (let r = 0; r < ROWS; r++) board[r][lx] = 0;
+  score += 500 * level;
+  updateHUD();
+}
+
 function lockPiece() {
+  if (current.type === LIGHTNING_TYPE) {
+    activateLightning(current.x, current.y);
+    spawn();
+    return;
+  }
   merge();
   clearLines();
   spawn();
@@ -146,7 +174,12 @@ function lockPiece() {
 
 function spawn() {
   current = next;
-  next = randomPiece();
+  if (pendingLightning) {
+    next = createLightningPiece();
+    pendingLightning = false;
+  } else {
+    next = randomPiece();
+  }
   if (collide(current.shape, current.x, current.y)) {
     endGame();
   }
@@ -165,9 +198,16 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
   context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  if (colorIndex === LIGHTNING_TYPE) {
+    context.fillStyle = '#222';
+    context.font = `bold ${size - 6}px sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('⚡', x * size + size / 2, y * size + size / 2 + 1);
+  } else {
+    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  }
   context.globalAlpha = 1;
 }
 
@@ -208,6 +248,15 @@ function draw() {
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+
+  // lightning flash overlay
+  if (lightningFlash > 0) {
+    ctx.globalAlpha = (lightningFlash / 12) * 0.55;
+    ctx.fillStyle = '#ffeb3b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
+    lightningFlash--;
+  }
 }
 
 function drawNext() {
@@ -270,6 +319,9 @@ function init() {
   gameOver = false;
   dropInterval = 1000;
   dropAccum = 0;
+  pendingLightning = false;
+  nextLightningLines = LIGHTNING_INTERVAL;
+  lightningFlash = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
