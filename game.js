@@ -35,6 +35,170 @@ const LINE_SCORES = [0, 100, 300, 500, 800];
 const LIGHTNING_TYPE = 9;
 const LIGHTNING_INTERVAL = 5; // lines between lightning spawns
 
+// ---- Skins ----
+
+const NEON_COLORS = [
+  null,
+  '#00fff5', // I
+  '#ffe600', // O
+  '#cc00ff', // T
+  '#00ff66', // S
+  '#ff2244', // Z
+  '#0088ff', // J
+  '#ff8800', // L
+  '#ff00aa', // Nut
+  '#ffff00', // Lightning
+];
+
+const PASTEL_COLORS = [
+  null,
+  '#b2eaf2', // I
+  '#fff3b0', // O
+  '#ddb8f0', // T
+  '#c5e8c7', // S
+  '#f5b8b8', // Z
+  '#b8d8f5', // J
+  '#ffd9b0', // L
+  '#f5b8d8', // Nut
+  '#fffaaa', // Lightning
+];
+
+const PIXEL_COLORS = [
+  null,
+  '#38b6c8', // I
+  '#c8a000', // O
+  '#8040a0', // T
+  '#408040', // S
+  '#a03030', // Z
+  '#3060a0', // J
+  '#c07030', // L
+  '#a01060', // Nut
+  '#c0b000', // Lightning
+];
+
+function drawLightningEmoji(context, x, y, size) {
+  context.fillStyle = '#222';
+  context.font = `bold ${size - 6}px sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText('⚡', x * size + size / 2, y * size + size / 2 + 1);
+}
+
+const SKINS = {
+  retro: {
+    colors: COLORS,
+    paintBlock(context, x, y, colorIndex, size, alpha) {
+      const color = this.colors[colorIndex];
+      context.globalAlpha = alpha ?? 1;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      if (colorIndex === LIGHTNING_TYPE) {
+        drawLightningEmoji(context, x, y, size);
+      } else {
+        context.fillStyle = 'rgba(255,255,255,0.12)';
+        context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+      }
+      context.globalAlpha = 1;
+    },
+  },
+
+  neon: {
+    colors: NEON_COLORS,
+    paintBlock(context, x, y, colorIndex, size, alpha) {
+      const color = this.colors[colorIndex];
+      context.globalAlpha = alpha ?? 1;
+      context.shadowBlur = 15;
+      context.shadowColor = color;
+      context.fillStyle = color;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+      context.shadowBlur = 0;
+      context.strokeStyle = 'rgba(255,255,255,0.6)';
+      context.lineWidth = 1;
+      context.strokeRect(x * size + 1.5, y * size + 1.5, size - 3, size - 3);
+      if (colorIndex === LIGHTNING_TYPE) {
+        drawLightningEmoji(context, x, y, size);
+      }
+      context.globalAlpha = 1;
+    },
+  },
+
+  pastel: {
+    colors: PASTEL_COLORS,
+    paintBlock(context, x, y, colorIndex, size, alpha) {
+      const color = this.colors[colorIndex];
+      context.globalAlpha = alpha ?? 1;
+      context.fillStyle = color;
+      const px = x * size + 2;
+      const py = y * size + 2;
+      const w = size - 4;
+      const h = size - 4;
+      const rad = 5;
+      if (context.roundRect) {
+        context.beginPath();
+        context.roundRect(px, py, w, h, rad);
+        context.fill();
+      } else {
+        context.beginPath();
+        context.moveTo(px + rad, py);
+        context.lineTo(px + w - rad, py);
+        context.quadraticCurveTo(px + w, py, px + w, py + rad);
+        context.lineTo(px + w, py + h - rad);
+        context.quadraticCurveTo(px + w, py + h, px + w - rad, py + h);
+        context.lineTo(px + rad, py + h);
+        context.quadraticCurveTo(px, py + h, px, py + h - rad);
+        context.lineTo(px, py + rad);
+        context.quadraticCurveTo(px, py, px + rad, py);
+        context.closePath();
+        context.fill();
+      }
+      if (colorIndex === LIGHTNING_TYPE) {
+        drawLightningEmoji(context, x, y, size);
+      }
+      context.globalAlpha = 1;
+    },
+  },
+
+  pixel: {
+    colors: PIXEL_COLORS,
+    paintBlock(context, x, y, colorIndex, size, alpha) {
+      const color = this.colors[colorIndex];
+      context.globalAlpha = alpha ?? 1;
+      const bx = x * size;
+      const by = y * size;
+      context.fillStyle = '#111';
+      context.fillRect(bx, by, size, size);
+      context.fillStyle = color;
+      context.fillRect(bx + 1, by + 1, size - 2, size - 2);
+      const ps = Math.max(2, Math.floor(size / 8));
+      context.fillStyle = 'rgba(255,255,255,0.35)';
+      context.fillRect(bx + 2, by + 2, ps, ps);
+      context.fillRect(bx + 2 + ps, by + 2, ps, ps);
+      context.fillRect(bx + 2, by + 2 + ps, ps, ps);
+      context.fillStyle = 'rgba(0,0,0,0.25)';
+      context.fillRect(bx + size - 2 - ps, by + size - 2 - ps, ps, ps);
+      if (colorIndex === LIGHTNING_TYPE) {
+        drawLightningEmoji(context, x, y, size);
+      }
+      context.globalAlpha = 1;
+    },
+  },
+};
+
+let currentSkin = 'retro';
+
+function setSkin(name) {
+  if (!SKINS[name]) return;
+  currentSkin = name;
+  localStorage.setItem('tetris-skin', name);
+  canvas.classList.toggle('skin-neon', name === 'neon');
+  const skinSelectEl = document.getElementById('skin-select');
+  if (skinSelectEl) skinSelectEl.value = name;
+  draw();
+  drawNext();
+}
+
+// ---- DOM references ----
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -194,21 +358,7 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  if (colorIndex === LIGHTNING_TYPE) {
-    context.fillStyle = '#222';
-    context.font = `bold ${size - 6}px sans-serif`;
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText('⚡', x * size + size / 2, y * size + size / 2 + 1);
-  } else {
-    context.fillStyle = 'rgba(255,255,255,0.12)';
-    context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  }
-  context.globalAlpha = 1;
+  SKINS[currentSkin].paintBlock(context, x, y, colorIndex, size, alpha);
 }
 
 function drawGrid() {
@@ -372,5 +522,17 @@ themeToggleEl.addEventListener('change', () => applyTheme(themeToggleEl.checked)
 
 // Restore saved theme (default: dark)
 applyTheme(localStorage.getItem('tetris-theme') === 'light');
+
+// Skin selector
+const skinSelectEl = document.getElementById('skin-select');
+skinSelectEl.addEventListener('change', () => setSkin(skinSelectEl.value));
+
+// Restore saved skin (default: retro)
+const savedSkin = localStorage.getItem('tetris-skin');
+if (savedSkin && SKINS[savedSkin]) {
+  currentSkin = savedSkin;
+  canvas.classList.toggle('skin-neon', savedSkin === 'neon');
+  skinSelectEl.value = savedSkin;
+}
 
 init();
