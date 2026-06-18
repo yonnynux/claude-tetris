@@ -18,13 +18,17 @@
   --color-kbd-bg: #22223a;
   --color-kbd-border: #3a3a5a;
   --color-kbd-text: #aaa;
-  --color-overlay: rgba(10, 10, 20, 0.75);
+  --color-overlay: rgba(10, 10, 20, 0.85);
   --color-overlay-title: #e57373;
   --color-overlay-score: #7aa2f7;
   --color-btn-bg: #7aa2f7;
   --color-btn-text: #0f0f17;
   --color-btn-hover: #9bbdff;
   --color-grid: #22222e;
+  --color-table-border: #2a2a3a;
+  --color-table-header: #2a2a45;
+  --color-record-new: rgba(122, 162, 247, 0.18);
+  --color-record-new-border: #7aa2f7;
 }
 
 [data-theme="light"] {
@@ -40,13 +44,17 @@
   --color-kbd-bg: #d8d8ec;
   --color-kbd-border: #a8a8c8;
   --color-kbd-text: #444455;
-  --color-overlay: rgba(220, 220, 235, 0.9);
+  --color-overlay: rgba(220, 220, 235, 0.95);
   --color-overlay-title: #cc4444;
   --color-overlay-score: #4070d0;
   --color-btn-bg: #4070d0;
   --color-btn-text: #f0f0f8;
   --color-btn-hover: #5080e0;
   --color-grid: #d8d8ec;
+  --color-table-border: #c0c0d8;
+  --color-table-header: #d8d8f0;
+  --color-record-new: rgba(64, 112, 208, 0.12);
+  --color-record-new-border: #4070d0;
 }
 
 body {
@@ -225,6 +233,7 @@ kbd {
   backdrop-filter: blur(4px);
   border-radius: 4px;
   transition: background 0.25s;
+  overflow-y: auto;
 }
 
 .overlay.hidden {
@@ -237,6 +246,8 @@ kbd {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  padding: 16px 8px;
+  max-height: 100%;
 }
 
 #overlay-title {
@@ -249,13 +260,14 @@ kbd {
 
 #overlay-score {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-overlay-score);
   transition: color 0.25s;
 }
 
-#restart-btn {
-  margin-top: 8px;
+#restart-btn,
+#play-btn {
+  margin-top: 4px;
   background: var(--color-btn-bg);
   color: var(--color-btn-text);
   border: none;
@@ -268,6 +280,174 @@ kbd {
   transition: background 0.15s, color 0.15s;
 }
 
-#restart-btn:hover {
+#restart-btn:hover,
+#play-btn:hover {
   background: var(--color-btn-hover);
+}
+
+/* ---- Secondary button ---- */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-controls);
+  border: 1px solid var(--color-table-border);
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--color-kbd-bg);
+  color: var(--color-text);
+}
+
+/* ---- Start overlay title ---- */
+.overlay-main-title {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--color-title);
+  text-shadow: 0 0 20px var(--color-title-shadow);
+  transition: color 0.25s, text-shadow 0.25s;
+}
+
+/* ---- Records table ---- */
+.records-section {
+  width: 100%;
+}
+
+.records-heading {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--color-label);
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.records-table th,
+.records-table td {
+  padding: 5px 8px;
+  border: 1px solid var(--color-table-border);
+  text-align: center;
+  transition: border-color 0.25s;
+}
+
+.records-table th {
+  background: var(--color-table-header);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--color-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: background 0.25s, color 0.25s;
+}
+
+.records-table td:nth-child(1) {
+  font-weight: 700;
+  color: var(--color-label);
+  width: 24px;
+}
+
+.records-table td:nth-child(2) {
+  text-align: left;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-table td:nth-child(3) {
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--color-value);
+  font-weight: 700;
+}
+
+.record-new td {
+  background: var(--color-record-new);
+  border-color: var(--color-record-new-border) !important;
+  animation: record-pulse 0.6s ease 2;
+}
+
+@keyframes record-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.records-empty {
+  color: var(--color-label);
+  font-style: italic;
+  padding: 10px !important;
+}
+
+/* ---- Save record section ---- */
+.save-record-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.save-record-section.hidden {
+  display: none;
+}
+
+.save-record-label {
+  font-size: 12px;
+  color: var(--color-overlay-score);
+  letter-spacing: 1px;
+}
+
+.player-name-input {
+  background: var(--color-kbd-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  text-align: center;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.15s, background 0.25s, color 0.25s;
+}
+
+.player-name-input:focus {
+  border-color: var(--color-btn-bg);
+}
+
+#save-record-btn {
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#save-record-btn:hover {
+  background: var(--color-btn-hover);
+}
+
+/* ---- Gameover records section ---- */
+#gameover-records-section {
+  width: 100%;
+}
+
+#gameover-records-section.hidden {
+  display: none;
 }

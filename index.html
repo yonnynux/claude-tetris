@@ -25,6 +25,10 @@
           <span class="label">LEVEL</span>
           <span class="value" id="level">1</span>
         </div>
+        <div class="panel-section">
+          <span class="label">COMBO</span>
+          <span class="value" id="combo">0</span>
+        </div>
 
         <div class="panel-section">
           <span class="label">NEXT</span>
@@ -55,10 +59,60 @@
       </aside>
     </div>
 
+    <!-- Start screen overlay (shown before first game) -->
+    <div id="start-overlay" class="overlay">
+      <div class="overlay-box">
+        <p class="overlay-main-title">TETRIS</p>
+        <div class="records-section">
+          <p class="records-heading">TOP 5</p>
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Score</th>
+                <th>Líneas</th>
+                <th>Combo</th>
+              </tr>
+            </thead>
+            <tbody id="start-records-body"></tbody>
+          </table>
+        </div>
+        <button id="play-btn">¡Jugar!</button>
+        <button id="reset-records-btn" class="btn-secondary">Resetear records</button>
+      </div>
+    </div>
+
+    <!-- Game overlay (pause / game over) -->
     <div id="overlay" class="overlay hidden">
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <!-- Save record section (shown only when score qualifies) -->
+        <div id="save-record-section" class="save-record-section hidden">
+          <p class="save-record-label">¡Nueva entrada en el top 5!</p>
+          <input type="text" id="player-name-input" class="player-name-input" maxlength="16" placeholder="Tu nombre" />
+          <button id="save-record-btn">Guardar</button>
+        </div>
+
+        <!-- Top 5 table shown on game over -->
+        <div id="gameover-records-section" class="records-section hidden">
+          <p class="records-heading">TOP 5</p>
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Score</th>
+                <th>Líneas</th>
+                <th>Combo</th>
+              </tr>
+            </thead>
+            <tbody id="gameover-records-body"></tbody>
+          </table>
+        </div>
+
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>
